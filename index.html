@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✨ 우리반 자리 배치도 ✨</title>
+    <!-- 귀여운 한글 폰트 적용 (구글 폰트 Jua) -->
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #FFF9F2; /* 따뜻한 크림색 배경 */
+            --desk-color: #FFDFBA;
+            --btn-exam: #AEC6CF;
+            --btn-buddy: #FFB7B2;
+            --btn-random: #B5EAD7;
+            --btn-print: #DFCCF1; /* 인쇄 버튼 색상 추가 (파스텔 보라) */
+            --text-color: #555;
+        }
+
+        body {
+            font-family: 'Jua', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 30px;
+            user-select: none;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #FF9AA2;
+            margin: 0 0 10px 0;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.05);
+        }
+
+        .instructions {
+            font-size: 1.1rem;
+            color: #888;
+            margin-bottom: 20px;
+            background-color: #fff;
+            padding: 10px 20px;
+            border-radius: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 40px;
+            flex-wrap: wrap; /* 버튼이 많아질 경우 자동 줄바꿈 */
+        }
+
+        button {
+            font-family: 'Jua', sans-serif;
+            font-size: 1.2rem;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 rgba(0,0,0,0.1);
+            transition: all 0.2s;
+            color: #444;
+        }
+
+        button:active {
+            transform: translateY(5px);
+            box-shadow: 0 0 0 rgba(0,0,0,0.1);
+        }
+
+        .btn-exam { background-color: var(--btn-exam); color: #fff; }
+        .btn-buddy { background-color: var(--btn-buddy); color: #fff; }
+        .btn-print { background-color: var(--btn-print); color: #fff; }
+        .btn-random { 
+            background-color: var(--btn-random); 
+            font-size: 1.3rem; 
+            font-weight: bold; 
+            border: 2px solid #94D1BE;
+        }
+
+        .teacher-desk {
+            width: 250px;
+            height: 50px;
+            background-color: var(--desk-color);
+            border-radius: 10px 10px 25px 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            color: #775;
+            margin-bottom: 50px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 3px solid #F4C494;
+        }
+
+        /* [자리 배치 로직 - CSS Grid] */
+        .classroom {
+            display: grid;
+            justify-content: center;
+            transition: all 0.4s ease;
+        }
+
+        /* 1. 시험형 (5x5) */
+        .classroom.exam {
+            grid-template-columns: repeat(5, 80px);
+            gap: 20px;
+        }
+
+        /* 2. 짝꿍형 (2인 1조 + 통로) */
+        .classroom.buddy {
+            grid-template-columns: 80px 80px 40px 80px 80px 40px 80px;
+            column-gap: 10px;
+            row-gap: 20px;
+        }
+
+        .classroom.buddy .seat:nth-child(5n+3) { grid-column: 4; }
+        .classroom.buddy .seat:nth-child(5n+4) { grid-column: 5; }
+        .classroom.buddy .seat:nth-child(5n+5) { grid-column: 7; }
+
+        /* 좌석 기본 스타일 */
+        .seat {
+            background-color: #ffffff;
+            height: 80px;
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            color: #555;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+            border: 4px solid #ddd;
+        }
+
+        /* 열마다 귀여운 파스텔 테두리 색상 적용 */
+        .seat:nth-child(5n+1) { border-color: #FF9AA2; }
+        .seat:nth-child(5n+2) { border-color: #FFDAC1; }
+        .seat:nth-child(5n+3) { border-color: #E2F0CB; }
+        .seat:nth-child(5n+4) { border-color: #B5EAD7; }
+        .seat:nth-child(5n+5) { border-color: #C7CEEA; }
+
+        .seat:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .seat.selected {
+            background-color: #FFF0F5;
+            border-color: #FF6961 !important;
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255,105,97,0.4);
+            z-index: 10;
+        }
+
+        .seat.drag-over {
+            background-color: #F0F8FF;
+            border-style: dashed;
+            transform: scale(1.1);
+        }
+
+        .seat.animating {
+            animation: pop 0.4s ease-in-out;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2) rotate(10deg); background-color: #FFF9C4; }
+            100% { transform: scale(1); }
+        }
+
+        /* 🖨️ 인쇄 최적화 (Print CSS) */
+        @media print {
+            @page {
+                margin: 20mm; /* 종이 여백 설정 */
+            }
+
+            body {
+                background-color: #fff; /* 배경색을 흰색으로 변경 (잉크 절약) */
+                padding: 0;
+            }
+
+            /* 인쇄할 때 숨겨야 할 요소들 (버튼, 안내문구) */
+            .instructions, .controls {
+                display: none !important;
+            }
+
+            h1 {
+                color: #333; /* 제목을 진하게 */
+                text-shadow: none;
+                margin-bottom: 30px;
+            }
+
+            /* 그림자 제거 및 선명도 조절 */
+            .seat, .teacher-desk {
+                box-shadow: none !important;
+            }
+
+            /* 브라우저에서 인쇄할 때 파스텔 색상(배경, 테두리)이 무시되지 않도록 강제 적용 */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>✨ 우리반 자리 배치도 ✨</h1>
+        <div class="instructions">
+            자리를 바꾸려면 좌석 두 개를 차례로 <strong>클릭</strong> 하거나, <strong>드래그 앤 드롭</strong> 하세요!
+        </div>
+        <div class="controls">
+            <button class="btn-exam" onclick="setMode('exam')">🏫 시험 대형 (5x5)</button>
+            <button class="btn-buddy" onclick="setMode('buddy')">👯 짝꿍 대형 (2인1조)</button>
+            <button class="btn-print" onclick="window.print()">🖨️ 인쇄하기</button>
+            <button class="btn-random" onclick="randomizeSeats()">🎲 자리 뽑기!</button>
+        </div>
+    </div>
+
+    <div class="teacher-desk">👨‍🏫 교 탁 👩‍🏫</div>
+    
+    <div id="classroom" class="classroom exam"></div>
+
+    <script>
+        const classroom = document.getElementById('classroom');
+        const numStudents = 25;
+        let seats = [];
+        let selectedSeat = null; 
+        let draggedSeat = null;  
+
+        // 1. 초기 자리 생성
+        function initClassroom() {
+            for (let i = 1; i <= numStudents; i++) {
+                const seat = document.createElement('div');
+                seat.classList.add('seat');
+                seat.innerText = i;
+                seat.draggable = true; 
+
+                // 이벤트 연결
+                seat.addEventListener('click', () => handleSeatClick(seat));
+                seat.addEventListener('dragstart', handleDragStart);
+                seat.addEventListener('dragover', handleDragOver);
+                seat.addEventListener('dragenter', handleDragEnter);
+                seat.addEventListener('dragleave', handleDragLeave);
+                seat.addEventListener('drop', handleDrop);
+                seat.addEventListener('dragend', handleDragEnd);
+
+                classroom.appendChild(seat);
+                seats.push(seat);
+            }
+        }
+
+        // 2. 대형 모드 변경
+        function setMode(mode) {
+            if (mode === 'exam') {
+                classroom.classList.remove('buddy');
+                classroom.classList.add('exam');
+            } else {
+                classroom.classList.remove('exam');
+                classroom.classList.add('buddy');
+            }
+        }
+
+        // 3. 자리 랜덤 뽑기
+        function randomizeSeats() {
+            document.querySelector('.btn-random').disabled = true;
+            let shuffleCount = 0;
+            
+            const interval = setInterval(() => {
+                seats.forEach(seat => {
+                    seat.innerText = Math.floor(Math.random() * numStudents) + 1;
+                });
+                shuffleCount++;
+
+                if (shuffleCount > 20) {
+                    clearInterval(interval);
+                    applyFinalShuffle();
+                    document.querySelector('.btn-random').disabled = false;
+                }
+            }, 50);
+        }
+
+        // 안전한 배열 섞기
+        function applyFinalShuffle() {
+            let numbers = Array.from({length: numStudents}, (_, i) => i + 1);
+            
+            for (let i = numbers.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+            }
+
+            seats.forEach((seat, index) => {
+                seat.innerText = numbers[index];
+                seat.classList.add('animating');
+                setTimeout(() => seat.classList.remove('animating'), 400);
+            });
+        }
+
+        // 4. 클릭 교환
+        function handleSeatClick(seat) {
+            if (!selectedSeat) {
+                selectedSeat = seat;
+                seat.classList.add('selected');
+            } else if (selectedSeat === seat) {
+                selectedSeat.classList.remove('selected');
+                selectedSeat = null;
+            } else {
+                swapSeatsText(selectedSeat, seat);
+                selectedSeat.classList.remove('selected');
+                selectedSeat = null;
+            }
+        }
+
+        // 5. 드래그 교환
+        function handleDragStart(e) {
+            draggedSeat = this;
+            e.dataTransfer.effectAllowed = 'move';
+            setTimeout(() => this.style.opacity = '0.5', 0);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        function handleDragEnter(e) {
+            e.preventDefault();
+            if (this !== draggedSeat) {
+                this.classList.add('drag-over');
+            }
+        }
+
+        function handleDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.stopPropagation();
+            this.classList.remove('drag-over');
+            
+            if (draggedSeat && draggedSeat !== this) {
+                swapSeatsText(draggedSeat, this);
+            }
+            return false;
+        }
+
+        function handleDragEnd(e) {
+            this.style.opacity = '1';
+            seats.forEach(s => s.classList.remove('drag-over'));
+        }
+
+        function swapSeatsText(seat1, seat2) {
+            const temp = seat1.innerText;
+            seat1.innerText = seat2.innerText;
+            seat2.innerText = temp;
+
+            seat1.classList.add('animating');
+            seat2.classList.add('animating');
+            
+            setTimeout(() => {
+                seat1.classList.remove('animating');
+                seat2.classList.remove('animating');
+            }, 400);
+        }
+
+        initClassroom();
+    </script>
+</body>
+</html>
